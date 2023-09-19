@@ -8,9 +8,10 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	// "os"
 	"strings"
+
 	"github.com/icholy/digest"
-	
 )
 
 type HttpEventReader struct {
@@ -19,21 +20,20 @@ type HttpEventReader struct {
 }
 
 type CustomEvent struct {
-	IPAddress       string `xml:"ipAddress"`
-	IPv6Address     string `xml:"ipv6Address"`
-	PortNo          int    `xml:"portNo"`
-	Protocol        string `xml:"protocol"`
-	MACAddress      string `xml:"macAddress"`
-	ChannelID       int    `xml:"channelID"`
-	DateTime        string `xml:"dateTime"`
-	ActivePostCount int    `xml:"activePostCount"`
-	EventType       string `xml:"eventType"`
-	EventState      string `xml:"eventState"`
+	IPAddress        string `xml:"ipAddress"`
+	IPv6Address      string `xml:"ipv6Address"`
+	PortNo           int    `xml:"portNo"`
+	Protocol         string `xml:"protocol"`
+	MACAddress       string `xml:"macAddress"`
+	ChannelID        int    `xml:"channelID"`
+	DateTime         string `xml:"dateTime"`
+	ActivePostCount  int    `xml:"activePostCount"`
+	EventType        string `xml:"eventType"`
+	EventState       string `xml:"eventState"`
 	EventDescription string `xml:"eventDescription"`
-	ChannelName     string `xml:"channelName"`
-	Camera          *HikCamera
+	ChannelName      string `xml:"channelName"`
+	Camera           *HikCamera
 }
-
 
 func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func()) {
 	if eventReader.client == nil {
@@ -83,6 +83,9 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 
 	// READ PART BY PART
 	multipartReader := multipart.NewReader(response.Body, multipartBoundary)
+	// fmt.Println("------response body start-------")
+	// _, err = io.Copy(os.Stdout, response.Body) // Print the response body to stdout
+	// fmt.Println("\n------response body end---------")
 
 	for {
 		part, err := multipartReader.NextPart()
@@ -91,7 +94,7 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 			break
 		}
 		if err != nil {
-			fmt.Println("Error reading part:", err)
+			// fmt.Println("Error reading part:", err)
 			continue
 		}
 
@@ -139,7 +142,7 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 			}
 		} else if customEvent.EventType == "videoloss" && customEvent.EventState == "inactive" {
 			// This is a video loss event, you can handle it here
-			fmt.Printf("Handling Video Loss Event\n",)
+			fmt.Printf("Handling Video Loss Event\n")
 
 			// Rest of your code for handling the video loss event
 			// ...
@@ -160,6 +163,110 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 			case "inactive":
 				// Handle inactive state
 			}
+		} else if customEvent.EventType == "regionEntrance" && customEvent.EventState == "inactive" {
+			// This is a video loss event, you can handle it here
+			fmt.Printf("regionEntrance Event\n")
+
+			// Rest of your code for handling the video loss event
+			// ...
+
+			// FILL IN THE CAMERA INTO FRESHLY-UNMARSHALLED EVENT
+			customEvent.Camera = camera
+
+			if eventReader.Debug {
+				log.Printf("%s event: %s (%s - %d)", customEvent.Camera.Name, customEvent.EventType, customEvent.EventState, customEvent.ActivePostCount)
+			}
+
+			switch customEvent.EventState {
+			case "active":
+				fmt.Printf("regionEntrance Active\n")
+				//mqtt.SendMessage(config.TopicRoot+"/alarmserver", `{ "status": "up" }`)
+				// messageHandler(camera.Name, customEvent.EventType, "video loss alarm detected")
+				// Handle active state
+			case "inactive":
+				fmt.Printf("regionEntrance Inactive\n")
+				// Handle inactive state
+			}
+		} else if customEvent.EventType == "linedetection" && customEvent.EventState == "inactive" {
+			// This is a video loss event, you can handle it here
+			fmt.Printf("linedetection Event\n")
+
+			// Rest of your code for handling the video loss event
+			// ...
+
+			// FILL IN THE CAMERA INTO FRESHLY-UNMARSHALLED EVENT
+			customEvent.Camera = camera
+
+			if eventReader.Debug {
+				log.Printf("%s event: %s (%s - %d)", customEvent.Camera.Name, customEvent.EventType, customEvent.EventState, customEvent.ActivePostCount)
+			}
+
+			switch customEvent.EventState {
+			case "active":
+				fmt.Printf("linedetection Active\n")
+				//mqtt.SendMessage(config.TopicRoot+"/alarmserver", `{ "status": "up" }`)
+				// messageHandler(camera.Name, customEvent.EventType, "video loss alarm detected")
+				// Handle active state
+			case "inactive":
+				fmt.Printf("linedetection Inactive\n")
+				// Handle inactive state
+			}
 		}
 	}
 }
+
+
+
+
+
+//regionEntrance alarm
+
+// <EventNotificationAlert version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+// <ipAddress>182.188.2.10</ipAddress>
+// <ipv6Address>::ffff:182.188.2.10</ipv6Address>
+// <portNo>80</portNo>
+// <protocol>HTTP</protocol>
+// <macAddress>fc:9f:fd:7e:0a:b1</macAddress>
+// <channelID>1</channelID>
+// <dateTime>2023-09-19T11:44:57+05:30</dateTime>
+// <activePostCount>1</activePostCount>
+// <eventType>regionEntrance</eventType>
+// <eventState>inactive</eventState>
+// <eventDescription>regionEntrance alarm</eventDescription>
+// <channelName>FRONT COLOR</channelName>
+// </EventNotificationAlert>
+
+// linedetection alarm
+
+// <EventNotificationAlert version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+// <ipAddress>182.188.2.10</ipAddress>
+// <ipv6Address>::ffff:182.188.2.10</ipv6Address>
+// <portNo>80</portNo>
+// <protocol>HTTP</protocol>
+// <macAddress>fc:9f:fd:7e:0a:b1</macAddress>
+// <channelID>1</channelID>
+// <dateTime>2023-09-19T11:45:00+05:30</dateTime>
+// <activePostCount>1</activePostCount>
+// <eventType>linedetection</eventType>
+// <eventState>inactive</eventState>
+// <eventDescription>linedetection alarm</eventDescription>
+// <channelName>FRONT COLOR</channelName>
+// </EventNotificationAlert>
+
+// Motion alarm
+
+// <?xml version="1.0" encoding="UTF-8"?>
+// <EventNotificationAlert version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+// <ipAddress>182.188.2.11</ipAddress>
+// <ipv6Address>::ffff:182.188.2.11</ipv6Address>
+// <portNo>80</portNo>
+// <protocol>HTTP</protocol>
+// <macAddress>40:ac:bf:92:4d:03</macAddress>
+// <channelID>1</channelID>
+// <dateTime>2023-09-19T11:55:53+05:30</dateTime>
+// <activePostCount>1</activePostCount>
+// <eventType>VMD</eventType>
+// <eventState>active</eventState>
+// <eventDescription>Motion alarm</eventDescription>
+// <channelName>CARSHED</channelName>
+// </EventNotificationAlert>
