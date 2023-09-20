@@ -54,7 +54,6 @@ func main() {
 	}
 
 
-
 	if config.Hikvision.Enabled {
 		// START HIKVISION ALARM SERVER
 		hikvisionServer := hikvision.Server{

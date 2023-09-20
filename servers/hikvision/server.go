@@ -32,6 +32,10 @@ type HikEvent struct {
 	Message string
 	Camera  *HikCamera
 }
+type TestMessage struct {
+	Type    string
+	Message string
+}
 
 type Server struct {
 	Debug          bool
@@ -55,7 +59,7 @@ type XmlEvent struct {
 }
 
 type HikEventReader interface {
-	ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func())
+	ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func(),sendmqttmessage func(data TestMessage))
 }
 
 func (server *Server) addCamera(waitGroup *sync.WaitGroup, camera *HikCamera, eventChannel chan<- HikEvent) {
@@ -132,14 +136,20 @@ func (server *Server) addCamera(waitGroup *sync.WaitGroup, camera *HikCamera, ev
 		defer waitGroup.Done()
 		done := false
 		callback := func() {
+			fmt.Printf("HIK: Closed connection to camera\n")
 			done = true
 		}
-
+		sendmqttmessage := func(data TestMessage) {
+			fmt.Printf("HSend Mqtt Message function\n Field1 = %s, Field2 = %s \n",data.Message,data.Type)
+			done = true
+		}
+		// Type    string
+		// Message string
 		for {
 			if done {
 				break
 			}
-			camera.EventReader.ReadEvents(camera, eventChannel, callback)
+			camera.EventReader.ReadEvents(camera, eventChannel, callback,sendmqttmessage)
 		}
 		fmt.Printf("HIK: Closed connection to camera %s\n", camera.Name)
 	}()

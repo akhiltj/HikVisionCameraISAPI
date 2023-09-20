@@ -16,7 +16,7 @@ type TcpEventReader struct {
 	Debug bool
 }
 
-func (eventReader *TcpEventReader) ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func()) {
+func (eventReader *TcpEventReader) ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func(),sendmqttmessage func(data TestMessage)) {
 	// PARSE THE ADDRESS OUTTA CAMERA URL
 	cameraUrl, err := url.Parse(camera.Url)
 	if err != nil {

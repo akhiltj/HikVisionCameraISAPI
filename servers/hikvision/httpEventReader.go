@@ -10,7 +10,6 @@ import (
 	"net/http"
 	// "os"
 	"strings"
-
 	"github.com/icholy/digest"
 )
 
@@ -35,7 +34,7 @@ type CustomEvent struct {
 	Camera           *HikCamera
 }
 
-func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func()) {
+func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<- HikEvent, callback func(),sendmqttmessage func(data TestMessage)) {
 	if eventReader.client == nil {
 		eventReader.client = &http.Client{}
 		if camera.AuthMethod == Digest {
@@ -143,6 +142,11 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 		} else if customEvent.EventType == "videoloss" && customEvent.EventState == "inactive" {
 			// This is a video loss event, you can handle it here
 			fmt.Printf("Handling Video Loss Event\n")
+			data := TestMessage{
+				Type: "42",
+				Message: "Hello, World!",
+			}
+			sendmqttmessage(data)
 
 			// Rest of your code for handling the video loss event
 			// ...
@@ -161,6 +165,7 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 				// messageHandler(camera.Name, customEvent.EventType, "video loss alarm detected")
 				// Handle active state
 			case "inactive":
+				// fmt.Printf("%s event: %s (%s - %d)", customEvent.Camera.Name, customEvent.EventType, customEvent.EventState, customEvent.ActivePostCount)
 				// Handle inactive state
 			}
 		} else if customEvent.EventType == "regionEntrance" && customEvent.EventState == "inactive" {
@@ -214,3 +219,5 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 		}
 	}
 }
+
+
