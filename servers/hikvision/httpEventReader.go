@@ -144,7 +144,7 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 			fmt.Printf("Handling Video Loss Event\n")
 			data := TestMessage{
 				Type: "42",
-				Message: "Hello, World!",
+				Message: "videoloss",
 			}
 			sendmqttmessage(data)
 
@@ -161,8 +161,6 @@ func (eventReader *HttpEventReader) ReadEvents(camera *HikCamera, channel chan<-
 			switch customEvent.EventState {
 			case "active":
 				fmt.Printf("video loss alarm Event Active\n")
-				//mqtt.SendMessage(config.TopicRoot+"/alarmserver", `{ "status": "up" }`)
-				// messageHandler(camera.Name, customEvent.EventType, "video loss alarm detected")
 				// Handle active state
 			case "inactive":
 				// fmt.Printf("%s event: %s (%s - %d)", customEvent.Camera.Name, customEvent.EventType, customEvent.EventState, customEvent.ActivePostCount)

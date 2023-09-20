@@ -141,10 +141,9 @@ func (server *Server) addCamera(waitGroup *sync.WaitGroup, camera *HikCamera, ev
 		}
 		sendmqttmessage := func(data TestMessage) {
 			fmt.Printf("HSend Mqtt Message function\n Field1 = %s, Field2 = %s \n",data.Message,data.Type)
+			server.MessageHandler(data.Message,data.Type, "hello")
 			done = true
 		}
-		// Type    string
-		// Message string
 		for {
 			if done {
 				break
